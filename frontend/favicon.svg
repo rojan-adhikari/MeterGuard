@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Meter Risk">
+<defs><linearGradient id="case" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#274955"/><stop offset="1" stop-color="#102b37"/></linearGradient><linearGradient id="glass" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#f8ffff"/><stop offset="1" stop-color="#dceeed"/></linearGradient></defs>
+<rect x="8" y="4" width="48" height="56" rx="9" fill="url(#case)" stroke="#0c202a" stroke-width="2"/>
+<rect x="14" y="10" width="36" height="27" rx="4" fill="url(#glass)"/>
+<path d="M21 29a12 12 0 0 1 22 0" fill="none" stroke="#92b5b8" stroke-width="2.3" stroke-linecap="round"/>
+<path d="M32 28l7-9" stroke="#147d73" stroke-width="3.3" stroke-linecap="round"/><circle cx="32" cy="29" r="3" fill="#147d73"/>
+<rect x="16" y="43" width="19" height="9" rx="2" fill="#1d857a"/><path d="M40 47h7M40 51h7" stroke="#79c5bc" stroke-width="2" stroke-linecap="round"/>
+<circle cx="18" cy="8" r="1.1" fill="#819fa5"/><circle cx="46" cy="8" r="1.1" fill="#819fa5"/>
+</svg>
