@@ -1,0 +1,1 @@
+ALTER TABLE `reviews` ADD `evidence_json` text DEFAULT '{}' NOT NULL;

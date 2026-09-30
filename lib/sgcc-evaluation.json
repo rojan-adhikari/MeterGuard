@@ -1,0 +1,120 @@
+{
+  "dataset": "SGCC Electricity Theft Detection public historical dataset",
+  "source": "https://github.com/henryRDlab/ElectricityTheftDetection",
+  "training_date_utc": "2026-09-27T05:59:58.358997+00:00",
+  "records": 42372,
+  "positive_labels": 3615,
+  "date_range": [
+    "2014-01-01",
+    "2016-10-31"
+  ],
+  "split": {
+    "training_accounts": 25422,
+    "validation_accounts": 8475,
+    "test_accounts": 8475,
+    "rule": "disjoint stratified accounts; test accounts untouched until model selection"
+  },
+  "selected_model": "Random Forest",
+  "selection_metric": "validation average precision",
+  "validation": {
+    "Logistic Regression": {
+      "precision": 0.1914,
+      "recall": 0.6017,
+      "f1": 0.2904,
+      "balanced_accuracy": 0.6823,
+      "average_precision": 0.2884,
+      "roc_auc": 0.7512,
+      "confusion_matrix": [
+        [
+          5914,
+          1838
+        ],
+        [
+          288,
+          435
+        ]
+      ]
+    },
+    "Decision Tree": {
+      "precision": 0.1614,
+      "recall": 0.6819,
+      "f1": 0.261,
+      "balanced_accuracy": 0.6757,
+      "average_precision": 0.2592,
+      "roc_auc": 0.7267,
+      "confusion_matrix": [
+        [
+          5190,
+          2562
+        ],
+        [
+          230,
+          493
+        ]
+      ]
+    },
+    "Random Forest": {
+      "precision": 0.3777,
+      "recall": 0.3845,
+      "f1": 0.3811,
+      "balanced_accuracy": 0.6627,
+      "average_precision": 0.3527,
+      "roc_auc": 0.7914,
+      "confusion_matrix": [
+        [
+          7294,
+          458
+        ],
+        [
+          445,
+          278
+        ]
+      ]
+    }
+  },
+  "test": {
+    "precision": 0.3563,
+    "recall": 0.3154,
+    "f1": 0.3346,
+    "balanced_accuracy": 0.6311,
+    "average_precision": 0.3013,
+    "roc_auc": 0.7776,
+    "confusion_matrix": [
+      [
+        7340,
+        412
+      ],
+      [
+        495,
+        228
+      ]
+    ]
+  },
+  "threshold": 0.5,
+  "limits": "Daily historical consumption and published account labels. No confirmed theft period or field evidence for new cases; not a fraud verdict.",
+  "conservative_operating_point": {
+    "threshold": 0.7,
+    "selection": "Chosen from validation precision-recall tradeoff; test threshold fixed before reporting",
+    "validation": {
+      "precision": 0.5879,
+      "recall": 0.1618,
+      "flagged": 199
+    },
+    "test": {
+      "precision": 0.5163,
+      "recall": 0.1314,
+      "f1": 0.2095,
+      "flagged": 184,
+      "confusion_matrix": [
+        [
+          7663,
+          89
+        ],
+        [
+          628,
+          95
+        ]
+      ]
+    }
+  }
+}

@@ -44,10 +44,3 @@ next-env.d.ts
 /.codex/
 /outputs/
 /work/
-
-# Generated from the organized source by scripts/sync-source.mjs
-/public/
-/app/api/
-/lib/
-/db/
-/drizzle/

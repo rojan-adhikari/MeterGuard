@@ -1,30 +1,34 @@
-# MeterGuard — judge-friendly source
+# MeterGuard
 
-**Project:** Smart Meter-Based Electricity Fraud Risk Prediction  
-**Reference app:** https://gridsense-meter-risk.rojan-adhikari.chatgpt.site
+**Smart Meter-Based Electricity Fraud Risk Prediction**
 
-MeterGuard analyzes electricity-consumption histories and ranks accounts as Normal, Moderate, or High Risk. The dashboard shows trends and baseline changes, while the review queue records investigator status and notes. A flagged account still needs investigation and field evidence; a model score does not prove fraud.
+MeterGuard helps an electricity provider review smart-meter consumption. It scores account histories, shows Normal, Moderate, or High Risk, highlights usage patterns, and gives investigators a queue for statuses and notes. A flag is an investigation priority, not proof of electricity theft; confirmation needs field evidence.
 
-## Read the code in this order
+**Live app:** https://gridsense-meter-risk.rojan-adhikari.chatgpt.site
 
-| Step | Folder/file | Explain to judges |
+## What is included
+
+- Dashboard with account totals, risk distribution, recent results, and consumption trends.
+- CSV upload, manual hourly entry, historical daily-data upload, and validation messages.
+- Account-level score, chart, baseline comparison, and descriptive usage patterns.
+- Review queue with search, filters, statuses, and investigator notes stored in Cloudflare D1.
+- Model-performance page showing measured development and historical-dataset results.
+- `training/` with reproducible Python training scripts and saved Python artifacts; `lib/` has the trained model representations used by the hosted API.
+
+## Data and models
+
+| Input | CSV format | Model used by hosted app |
 | --- | --- | --- |
-| 1 | `frontend/ui.html` | Dashboard, CSV upload, manual entry, review queue, model-performance views. |
-| 2 | `frontend/assets/styles.css` | Responsive layout, status colors, forms, tables, and charts. |
-| 3 | `frontend/assets/app.js` | UI events, API calls, charts, validation, and queue controls. |
-| 4 | `backend/api/analyze/` | Three prediction endpoints: auto-detected CSV, daily CSV, and manual input. |
-| 5 | `backend/lib/data.ts`, `backend/lib/api.ts` | Hourly CSV validation, feature extraction, and three-class risk scoring. |
-| 6 | `backend/lib/sgcc.ts` | Historical SGCC daily features, trained forest score, risk category, and patterns. |
-| 7 | `backend/api/reviews/`, `backend/db/schema.ts` | Persistent review queue, search, status, and notes in Cloudflare D1. |
-| 8 | `training/train_sgcc.py`, `training/train.py` | Reproducible model training and evaluation. |
+| Hourly readings or manual entry | `account_id,timestamp,kwh`; at least 72 readings per account | Three-class development model trained on synthetic labels (`lib/model.json`) |
+| Historical daily readings | `CONS_NO`, optional `FLAG`, and date columns such as `2014/1/1`; at least 180 date columns | SGCC historical Random Forest (`lib/sgcc-forest.json`) |
 
-See [JUDGES_WALKTHROUGH.md](JUDGES_WALKTHROUGH.md) for the explanation script and request flow.
+The general **Upload CSV** control detects the format using the first column. `public/assets/sgcc_real_sample.csv` contains three historical accounts for a quick upload. `public/assets/sample_readings.csv` is a synthetic hourly example and must not be presented as real utility data. The daily dataset comes from the [public SGCC Electricity Theft Detection repository](https://github.com/henryRDlab/ElectricityTheftDetection), covering 42,372 accounts and 2014–2016 histories. Download its three archive parts (`data.z01`, `data.z02`, `data.zip`) there to reproduce full training.
 
-The `frontend/`, `backend/`, and `training/` folders are the canonical source. Next.js/Vinext expects `public/`, `app/api/`, `lib/`, `db/`, and `drizzle/` at the root. `scripts/sync-source.mjs` generates those paths from the organized folders before `dev` and `build`. **Edit the organized folders**, then run `npm run sync:source` or rebuild; do not edit generated copies.
+The SGCC `FLAG` is a published account-level label. It does not provide the incident date or field evidence for a new prediction. The historical evaluation uses disjoint account splits (60% train, 20% validation, 20% untouched test), **not** a prospective time test. At the high-priority score threshold of 0.70, the held-out test precision is **0.5163** and recall **0.1314**. The model therefore misses many positive labels and must not be used as an automated fraud verdict. See `lib/sgcc-evaluation.json` and `training/models/sgcc_evaluation.json` for all measured metrics. Development-model metrics in `lib/evaluation.json` are measured on synthetic labels and do not establish performance on utility accounts.
 
-## Run locally (same UI and API as the live app)
+## Run the dashboard locally
 
-Install Node.js 22.13+ and npm. On macOS or Linux, run from this folder:
+Requirements: Node.js 22.13+ and npm. The app uses Next.js/Vinext on Cloudflare Workers with D1 for reviews.
 
 ```bash
 npm ci
@@ -33,45 +37,36 @@ node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1
 npm run start
 ```
 
-Open the local address printed by Wrangler. The D1 migration is needed once per fresh local database. For code changes, use `npm run dev`; `predev` synchronizes the organized source. The local review database is separate from the hosted one. If the local database already has the table, skip the migration command.
+Open the local URL printed by Wrangler. Apply the D1 migration only once for a given local database. After source edits, rebuild with `npm run build`; `npm run dev` is available for development. The deployed Site uses a separate production D1 database, so your local review queue starts empty.
 
-## Input formats and sample files
+## Retrain the Python models
 
-- **Real historical daily CSV:** `CONS_NO`, optional `FLAG`, and date columns such as `2014/1/1`; use `frontend/assets/sgcc_real_sample.csv` (three actual historical account traces). The full public SGCC archive is at https://github.com/henryRDlab/ElectricityTheftDetection (download all split parts: `data.z01`, `data.z02`, `data.zip`).
-- **Hourly CSV:** `account_id,timestamp,kwh`; use `frontend/assets/sample_readings.csv` (synthetic development sample). At least 72 readings per account.
-- **Manual:** account ID, first timestamp, minutes between readings, and at least 72 kWh values.
-
-The normal Upload CSV button automatically selects the daily or hourly endpoint based on the first column. The daily sample should be uploaded through this button or through the Real daily data tab.
-
-## Models and measured limits
-
-The hourly three-class model was trained on **synthetic development labels**; its measured metrics are in `backend/lib/evaluation.json`. They do not establish utility performance. The historical SGCC model was selected from Logistic Regression, Decision Tree, and Random Forest using validation average precision. It uses 42,372 labeled accounts split by account into training, validation, and held-out test sets. At the hosted high-priority threshold of 0.70, test precision was **0.5163** and recall **0.1314** against the published account labels (`backend/lib/sgcc-evaluation.json`). This is a historical holdout, not prospective field validation.
-
-The hosted API loads `backend/lib/model.json` and `backend/lib/sgcc-forest.json`. `training/models/` contains saved Python artifacts and evaluation files. Python retraining alone does not update the deployed TypeScript representation: re-export the fitted model into the compatible format, verify inference parity, then deploy.
-
-## Retraining
+Create a Python 3.11+ environment, then install dependencies:
 
 ```bash
 cd training
-python3 -m venv .venv
+python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+```
+
+Train the three SGCC candidate models and score the bundled real sample:
+
+```bash
 python train_sgcc.py --input /path/to/extracted/data.csv --output models
 python predict_sgcc.py --input data/sgcc_real_sample.csv --model models/sgcc_model.joblib --output sgcc_predictions.csv
 ```
 
-For the hourly model, supply a readings CSV (`account_id,timestamp,kwh`) and verified account labels using `python train.py --readings /path/readings.csv --labels /path/labels.csv --output models`. The SGCC `FLAG` is a published dataset label and does not include field evidence for new accounts.
+The SGCC trainer cleans negative/missing readings, extracts consumption, variability, zero-use, weekend, and baseline-change features, selects among Logistic Regression, Decision Tree, and Random Forest on validation average precision, and writes a held-out evaluation report. The saved Python model is in `training/models/sgcc_model.joblib`. The synthetic hourly training path is `python train.py --readings /path/to/hourly.csv --labels /path/to/labels.csv --output models`; see `training/train.py --help` for arguments.
 
-## API routes
+**Deployment note:** the hosted Cloudflare API loads the serialized models in `lib/`, not Python `joblib`. Running the Python trainer updates the Python artifact only; deploy a new compatible model representation and verify the API before claiming the hosted model was retrained. Only load `joblib` files from trusted sources.
 
-- `POST /api/analyze/upload`: multipart CSV; auto-detect format.
-- `POST /api/analyze/daily`: multipart SGCC daily CSV.
-- `POST /api/analyze/manual`: JSON manual hourly readings.
+## API
+
+- `POST /api/analyze/upload` — multipart `file`, auto-detects hourly or SGCC daily CSV.
+- `POST /api/analyze/daily` — multipart SGCC daily CSV.
+- `POST /api/analyze/manual` — JSON `account_id`, `start_timestamp`, `interval_minutes`, `kwh_values`.
 - `GET /api/summary`, `/api/model`, `/api/model/sgcc`, `/api/reviews`.
-- `PATCH /api/reviews/:account_id`: review status and notes.
+- `PATCH /api/reviews/:account_id` — update status and notes.
 
-This is a research/demo implementation without user authentication. A provider would need access control, auditing, and data governance before using private customer records.
-
-## Cloudflare Workers deployment
-
-Read [CLOUDFLARE_DEPLOY.md](CLOUDFLARE_DEPLOY.md) before deployment. Create a D1 database, replace the placeholder ID in `wrangler.json`, build, apply `drizzle/0000_spicy_next_avengers.sql` remotely, then deploy the Worker.
+This project is a research/demo application without user authentication. Add identity, access control, audit trails, and a data-governance process before handling private utility customer records.
