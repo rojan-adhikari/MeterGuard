@@ -4,7 +4,7 @@
 
 MeterGuard helps an electricity provider review smart-meter consumption. It scores account histories, shows Normal, Moderate, or High Risk, highlights usage patterns, and gives investigators a queue for statuses and notes. A flag is an investigation priority, not proof of electricity theft; confirmation needs field evidence.
 
-**Live app:** https://gridsense-meter-risk.rojan-adhikari.chatgpt.site
+**Live app:** https://meterguard-rojan.rozan-adhikari07.workers.dev/ui
 
 ## What is included
 
